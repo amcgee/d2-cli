@@ -20,7 +20,7 @@
         "@dhis2/cli-utils": "4.0.5",
         "cli-table3": "^0.6.0",
         "envinfo": "^7.5.0",
-        "inquirer": "^7.1.0"
+        "inquirer": "^8.1.1"
     },
     "bin": {
         "d2": "bin/d2"

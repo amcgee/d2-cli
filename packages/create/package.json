@@ -16,7 +16,7 @@
         "@dhis2/cli-helpers-template": "^3.0.0",
         "fs-extra": "^9.0.0",
         "handlebars": "^4.7.3",
-        "inquirer": "^7.1.0"
+        "inquirer": "^8.1.1"
     },
     "publishConfig": {
         "access": "public"
