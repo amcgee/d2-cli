@@ -14,10 +14,18 @@ const utils = require('../../../support/utils')
 const DHIS2HtmlFormatter = require('./schemaHtmlFormatter')
 
 let cache
+
+const hashKeys = ['singular', 'name', 'fieldName', 'type']
 // We use the singular property as an unique identifier for schemas
 // name and type are used for other nested properties
 const objectHash = obj =>
     obj.singular || obj.name || obj.fieldName || obj.type || obj
+
+const getHashKeyForObject = obj =>
+    hashKeys.find(hashKey => Object.keys(obj).find(prop => hashKey === prop))
+
+const getHashKeyForArray = array => getHashKeyForObject(array[0])
+
 const Differ = jsondiffpatch.create({
     objectHash,
     propertyFilter: name => name !== 'href' && name !== 'apiEndpoint',
@@ -80,18 +88,50 @@ function sortArrayProps(obj) {
     })
 }
 
+function transformArrayToObject(array, hashKey) {
+    return array.reduce((acc, curr, index) => {
+        let hash = curr[hashKey]
+        if (!hash) {
+            reporter.warn(
+                'hash-candidate value not found, falling back to index for ',
+                curr
+            )
+            hash = index
+        }
+        acc[curr[hashKey]] = curr
+        return acc
+    }, {})
+}
+
+// recursively travers the object and convert any
+// array that is hashable (see hashKeys) to objects hashed by that key
+// note that this will *not* further traverse array properties, only objects
+
+function transformArrayPropsToHash(object) {
+    Object.keys(object).forEach(key => {
+        const val = object[key]
+        if (Array.isArray(val) && val.length) {
+            const hashKey = getHashKeyForArray(val)
+            if (hashKey) {
+                object[key] = transformArrayToObject(val, hashKey)
+            }
+        } else if (val && val.constructor.name === 'Object') {
+            transformArrayPropsToHash(val)
+        }
+    })
+}
+
 // We are not interersted in indexes, so we convert to an object
 // with 'singular' as hash for schemas
 // This makes the diff more stable, as it has problems with
 // arrays with moved objects (even with objectHash)
 function prepareDiff(left, right, { sortArrays }) {
-    const setProp = (obj, curr) => {
-        obj[curr.singular] = curr
-        return obj
-    }
+    const leftO = transformArrayToObject(left, 'singular')
+    const rightO = transformArrayToObject(right, 'singular')
 
-    const leftO = left.reduce(setProp, {})
-    const rightO = right.reduce(setProp, {})
+    transformArrayPropsToHash(leftO)
+    transformArrayPropsToHash(rightO)
+
     if (sortArrays) {
         sortArrayProps(leftO)
         sortArrayProps(rightO)
