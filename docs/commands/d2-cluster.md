@@ -87,9 +87,33 @@ command to be able to do anything at all: `{command}` and `{name}`.
 d2 cluster {command} {name}
 ```
 
-The command refers to an action, like `up` or `down` and the name is the
+The command refers to an action, like `up` or `down` (see below for more information and examples) and the name is the
 name of the cluster to operate on, which can be anything you like, like
 `mydev`, `superfly`, or `2.32`.
+
+### Command `up`
+
+This command spins up a new cluster: 
+
+```bash
+d2 cluster up {name}
+```
+
+### Command `down`
+
+This command destroys a running container: 
+
+```bash
+d2 cluster down {name}
+```
+
+#### Command `down --clean`
+
+This command destroys all data volumes as well as ephemeral containers: 
+
+```bash
+d2 cluster down {name} --clean 
+```
 
 ## Arguments
 
